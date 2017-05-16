@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="Free Code Camp tic tac toe project">
+  <meta name="author" content="Kelsey Hutchison">
+
+  <link href='https://fonts.googleapis.com/css?family=Crushed' rel='stylesheet' type='text/css'>
+
+  <title>Pomodoro Timer</title>
+
+  <script
+    src="http://code.jquery.com/jquery-3.2.1.slim.min.js"
+    integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g="
+    crossorigin="anonymous"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+<!--
+    <script
+  src="https://code.jquery.com/ui/1.11.2/jquery-ui.js"
+  integrity="sha256-JuG1CcoXp1bbh4ZIQOMaGnyqLOkWSqL/8sYShMWCwMI="
+  crossorigin="anonymous"></script> -->
+
+    <!-- <script
+    src="http://code.jquery.com/jquery-3.0.0.slim.min.js"
+    integrity="sha256-Rf4BadfyCtsvHmO89BUZcbYvNNvZvOT08ALfEzvCsD0="
+    crossorigin="anonymous"></script>
+ -->
+
+  <style>
+    body {
+      background-color:#D7B9B2;
+      font-family: 'Crushed', cursive;
+      color:#572F49;
+    }
+    body h1, body h5 {
+      text-align:center;
+      margin:5px;
+    }
+
+    body h4 {text-align:center;}
+    #choose, #chosen {
+      text-align:center;
+      border:3px solid #CE9777;
+      border-radius:2px;
+      margin:auto auto 25px auto;
+      height:100px;
+      width:200px;
+    }
+
+    #choose {
+      margin-top:100px;
+    }
+    #chosen {
+      display:none;
+      border:none;
+      height:55px;
+      font-size:.8em;
+    }
+
+    #choose ul, #chosen ul {
+      list-style:none;
+      padding:0;
+    }
+
+    #choose ul li, #chosen ul li {
+      display:inline-block;
+      padding: 5px 20px;
+      border:2px solid #CE9777;
+      border-radius:3px;
+    }
+    #choose ul li.this_one {
+      background-color:gray;
+    }
+    #choose ul li:hover {
+      background-color:#990000;
+      color:#D7B9B2;
+    }
+
+    #chosen h3 {
+      padding:0px;
+      margin:0px;
+      display:inline;
+    }
+    #chosen ul {
+      display:inline;
+      padding:5px;
+    }
+    #chosen ul li {
+      padding:3px;
+      display:inline;
+      border:2px solid #CE9777;
+      border-radius:3px;
+    }
+    #board {
+      display:none;
+      margin:auto auto;
+      height:400px;
+      width:400px;
+    }
+
+    .row {
+      width:100%;
+      height:33%;
+      margin:auto auto;
+      padding:0px 0px;
+      vertical-align:top;
+    }
+
+    .section {
+     vertical-align:top;
+      border:1px solid #990000;
+      display:inline-block;
+      width:32%;
+      height:100%;
+      padding:0px 0px;
+    }
+
+    #row1 .section{
+      border-top:none;
+    }
+    #row3 .section {
+      border-bottom:none;
+    }
+
+    .section:nth-child(1) {
+      border-left:none;
+    }
+
+    .section:nth-child(3) {
+      border-right:none;
+    }
+
+    .marker {
+      display:block;
+      font-size:5em;
+      padding:0px;
+      margin:0px;
+      text-align:center;
+      vertical-align:middle;
+    }
+
+    #helpful_messages {
+      text-align:center;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <h1>tic tac toe</h1>
+  <h5 id="what_is_this" >obviously you're not a golfer</h5>
+  <div id="choose">
+    <h3>choose your marker</h3>
+    <ul>
+      <li id="xbox">X</li>
+      <li id="obox">O</li>
+    </ul>
+  </div>
+
+  <div id="chosen">
+    <h3></h3>
+    <ul>
+      <li></li>
+    </ul>
+  </div>
+  <h4 id="helpful_messages"></h4>
+
+
+  <div id="board">
+    <div class="row" id="row1">
+      <div id="0" class="section"></div>
+      <div id="1" class="section"></div>
+      <div id="2" class="section"></div>
+    </div>
+
+    <div class="row" id="row2">
+      <div id="3" class="section"></div>
+      <div id="4" class="section"></div>
+      <div id="5" class="section"></div>
+    </div>
+
+    <div class="row" id="row3">
+      <div id="6" class="section"></div>
+      <div id="7" class="section"></div>
+      <div id="8" class="section"></div>
+    </div>
+  </div>
+
+<script>
+
+$(document).ready(function(){
+
+ //var playermarker, compmarker;
+ //var player, ai;
+ var result;
+ var player = "P";
+ var computer = "C";
+ var whoseTurn = {"P":"","C":""};
+ var markers = ["X", "O"];
+ var playermarks = [];
+ var computermarks = [];
+ //var nextMove;
+ var waiting_for_player;
+ var wfp = [];
+
+//START
+ var currentGame = {
+    //"AIMoveCount":0,
+    "turn":"X",
+    //"status":"not playing",
+    "board":["E","E","E","E","E","E","E","E","E"]
+ };//currentGameState
+
+  function clear_wfp() {
+    // console.log("clearing wfp timers");
+    // console.log(wfp);
+    $("#helpful_message").slideUp();
+    for (var i=0; i<wfp.length;i++) {
+      clearTimeout(wfp[i]);
+    }
+    // console.log(wfp);
+  }
+
+   function advanceTurn() {
+      if (currentGame.turn == "X") {
+         currentGame.turn = "O";
+      } else if (currentGame.turn == "O") {
+         currentGame.turn = "X";
+      }
+    }
+
+    //find which cells are empty
+    function emptyCells(board) {
+      var emptyIndices = [];
+      for (var i=0;i<9;i++) {
+        if (board[i] === "E") {
+          emptyIndices.push(i);
+        }//if
+      }//for loop
+      //console.log("empty cell indices: "+emptyIndices);
+      return emptyIndices;
+    }//emptycells function
+
+    function moveAvailable(move) {
+      //is move in emptyCells(board);
+      if (currentGame.board[move] == "E") {
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    //function to check if a state is terminal or not
+    //so, either a win or a draw
+    function isTerminal(thisBoard) {
+      //check to see if someone has won
+      var result = false;
+      //check the rows
+      //console.log('checking rows');
+      for (var i=0; i<=6; i+=3) {
+        if (thisBoard[i] !== "E" && thisBoard[i] == thisBoard[i+1] && thisBoard[i+1] == thisBoard[i+2] ) {
+          // console.log(thisBoard[i]+" has won");
+          // console.log(result);
+          result = true;//true that state is terminal
+        }//if
+      }//rows for
+
+      //check the columns
+      //console.log("checking columns");
+      for (i=0; i<=2; i++) {
+        if (thisBoard[i] !== "E" && thisBoard[i] == thisBoard[i+3] && thisBoard[i+3] == thisBoard[i+6] ) {
+          // console.log(thisBoard[i]+" has won");
+          // console.log(result);
+          result = true;
+        }//if
+      }//columns for
+
+      //check the diagonals
+      if (thisBoard[4] !== "E" && thisBoard[0] == thisBoard[4] && thisBoard[4] == thisBoard[8]) {
+        result = true;
+      } else if (thisBoard[4] !== "E" && thisBoard[2] == thisBoard[4] && thisBoard[4] == thisBoard[6]) {
+        result = true;
+        }//diags if else if
+
+      var available = emptyCells(currentGame.board);
+        if (available.length === 0) {
+          result = true;//true that game is terminal because there are no more moves left;
+        }
+      console.log(result);
+      return result;
+  }//terminal function
+
+function findMove(board, whichPlayer) {
+    var moveToMake;
+     for (var i=0; i<=6; i+=3) {
+        if (board[i] == whichPlayer && board[i] == board[i+1]) {
+          moveToMake = i+2;
+          if (moveAvailable(moveToMake)) {
+            return moveToMake;
+          }
+        } else if (board[i+1] == whichPlayer && board[i+1] == board[i+2]) {
+          moveToMake = i;
+          if (moveAvailable(moveToMake)) {
+            return moveToMake;
+          }
+        } else if (board[i] == whichPlayer && board[i] == board[i+2] ) {
+          moveToMake = i+1;
+          if (moveAvailable(moveToMake)) {
+            return moveToMake;
+          }
+        }//if
+      }//rows for
+
+    //check the columns
+      for (i=0; i<=2; i++) {
+        if (board[i] == whichPlayer && board[i] == board[i+3]) {
+          moveToMake = i+6;
+          if (moveAvailable(moveToMake)) {
+            return moveToMake;
+          }
+        } else if (board[i] == whichPlayer && board[i] == board[i+6]){
+          moveToMake = i+3;
+          if (moveAvailable(moveToMake)) {
+            return moveToMake;
+          }
+        } else if (board[i+3] == whichPlayer && board[i+3] == board[i+6]) {
+          moveToMake = i;
+          if (moveAvailable(moveToMake)) {
+            return moveToMake;
+          }
+        }//if
+      }//columns for
+
+      //check the diagonals
+      if (board[0] == whichPlayer && board[0] == board[4]) {
+        moveToMake = 8;
+        if (moveAvailable(moveToMake)) {
+            return moveToMake;
+          }
+      } else if (board[4] == whichPlayer && board[4] == board[8]){
+        moveToMake = 0;
+        if (moveAvailable(moveToMake)) {
+            return moveToMake;
+          }
+      } else if (board[8] == whichPlayer && board[8] == board[0]){
+        moveToMake = 4;
+        if (moveAvailable(moveToMake)) {
+            return moveToMake;
+          }
+      } else if (board[2] == whichPlayer && board[2] == board[4]) {
+        moveToMake = 6;
+        if (moveAvailable(moveToMake)) {
+            return moveToMake;
+          }
+      } else if (board[4] == whichPlayer && board[4] == board[6]) {
+          moveToMake = 2;
+          if (moveAvailable(moveToMake)) {
+            return moveToMake;
+          }
+      } else if (board[6] == whichPlayer && board[6] == board[2]) {
+        moveToMake = 4;
+        if (moveAvailable(moveToMake)) {
+            return moveToMake;
+          }
+      }//diags if else if
+  }//findMove function
+
+function computerFindMove(board) {
+  //if can win, win
+ if (findMove(currentGame.board, whoseTurn["C"])) {
+    return findMove(currentGame.board, whoseTurn["C"]);
+ }
+
+  //if can block player from winning, block
+  if (findMove(currentGame.board, whoseTurn["P"])) {
+     return findMove(currentGame.board, whoseTurn["P"]);
+ }
+  //if can take a corner, take a corner
+  var corners = [0,2,6,8];
+  var iterator = [0,1,2,3];
+  var rand_iter = [Math.floor(Math.random()*iterator.length)];
+
+  for (var i=0;i<4;i++) {
+    // console.log("i is "+i);
+    // console.log("rand_itr is "+rand_iter);
+    // console.log("corner is "+corners[rand_iter]);
+    if (moveAvailable(corners[rand_iter])) {
+      return corners[rand_iter];
+    } else {
+      rand_iter += 1;
+      if (rand_iter > 3) {
+        rand_iter = 0;
+      }
+    }
+  }
+  //otherwise, take whatever's available
+  for (var i=0;i<9;i++) {
+    if (moveAvailable(i)) {
+      return i;
+    }
+  }
+}
+
+
+ function endGame() {
+   clear_wfp();
+   alert("Game Over!");
+   currentGame = {
+     "turn":"X",
+     "board":["E","E","E","E","E","E","E","E","E"],
+     "status":"not playing"
+   };
+   $(".marker").fadeOut("slow");
+   $(".section").empty();
+  // $(".section").children().css("display","inline");
+
+   $("helpful_messages").fadeOut("slow");
+   if (whoseTurn["C"] === "X") {
+     computerTurn();
+   }
+  }
+
+
+ function computerTurn() {
+   //computer finds its move
+   var aiMove = computerFindMove(currentGame.board);
+  //  console.log("computer's move is "+aiMove);
+   //mark the virtual board
+   currentGame.board[aiMove] = whoseTurn["C"];
+   //console.log("now computer has played "+currentGame.board);
+   //mark the visual board
+   $("#"+aiMove).html("<div class='marker'>"+whoseTurn["C"]+"</div>");
+   //if the computer won, end game
+
+   //advance the turn so that the player is able to go
+   advanceTurn();
+
+    if (isTerminal(currentGame.board)) {
+      endGame();
+    }
+
+   waiting_for_player();
+
+}//computerTurn function
+
+
+function playTTT() {
+    if (whoseTurn["C"] == "X") {
+      computerTurn();
+    }
+}//playTTT function
+
+
+  function initialChoice() {
+    $(this).addClass("this_one");
+    $("#chosen h3").text("Your marker is: ");
+    $("#chosen ul li").text(whoseTurn["P"]);
+    $("#choose").slideUp();
+    $("#what_is_this").slideUp();
+    $("#chosen").css("display", "block");
+    $("#chosen").slideDown();
+    $("#board").slideDown();
+    $("#board").css("display", "block");
+    playTTT();
+  }
+
+//player chooses X or O using button click functions
+
+  $("#xbox").click(function(){
+    whoseTurn["P"] = "X";
+    whoseTurn["C"] = "O";
+    initialChoice();
+  });//xbox click function
+
+  $("#obox").click(function(){
+    whoseTurn["C"] = "X";
+    whoseTurn["P"] = "O";
+    initialChoice();
+  });//obox click function
+
+  $(".section").click(function(){
+    //if it is in fact the player's turn
+    clear_wfp();
+    //console.log("cG.turn, wT[p]");
+    //console.log(currentGame.turn);
+    //console.log(whoseTurn["P"]);
+    if (currentGame.turn == whoseTurn["P"]) {
+        //get the id of the square they'd like to click on
+        var the_id = $(this).attr("id");
+
+        //if the space is empty
+        if (currentGame.board[the_id] == "E") {
+          //mark the space on the virtual board as being taken
+          currentGame.board[the_id] = whoseTurn["P"];
+
+          //mark the space on the visual board
+          $(this).html("<div class='marker'>"+whoseTurn["P"]+"</div>");
+
+          //if the player won, then it's game over
+          if (isTerminal(currentGame.board)) {
+            endGame();
+            return;
+          }
+          //now it's the computer's turn
+          advanceTurn();
+          //go computer go!
+          computerTurn();
+
+        } else {//if the space isn't empty
+          // console.log("space already taken!");
+          $(this).animate({ color: "#990000" }, 200).animate({ color: "#572F49" }, 300).animate({ color: "#990000" }, 200).animate({ color: "#572F49" }, 500);
+          clear_wfp();
+          waiting_for_player();
+        }
+    }
+  });//section click function
+
+   function waiting_for_player() {
+     clear_wfp();
+    //  console.log("starting w_f_p");
+     wfp = [];
+     $("#helpful_messages").hide();
+     wfp.push(setTimeout(function(){
+    //  console.log("first message");
+     $("#helpful_messages").text("it's your turn, "+whoseTurn["P"]);
+     $("#helpful_messages").slideDown();
+      wfp.push(setTimeout(function() {
+       $("#helpful_messages").slideUp();
+       wfp.push(setTimeout(function() {
+          //second message
+        // console.log("2nd message");
+        $("#helpful_messages").html("...It's a league game, Smokey");
+        $("#helpful_messages").slideDown();
+        wfp.push(setTimeout(function() {
+         $("#helpful_messages").slideUp();
+          wfp.push(setTimeout(function() {
+           $("#helpful_messages").text("Are you employed, sir?");
+           $("#helpful_messages").slideDown();
+            wfp.push(setTimeout(function() {
+             $("#helpful_messages").slideUp();
+             wfp.push(setTimeout(function() {
+                //fourth message
+                $("#helpful_messages").slideDown();
+               $("#helpful_messages").text("Has the whole world gone crazy? Am I the only one around here who [cares] about the rules?");
+                  wfp.push(setTimeout(function() {
+                  $("#helpful_messages").slideUp();
+                    //fifth and final message
+                    wfp.push(setTimeout(function() {
+                     $("#helpful_messages").text("This is what happens when you find a stranger in the Alps!");
+                      $("#helpful_messages").slideDown();
+                    wfp.push(setTimeout(function() {
+                         $("#helpful_messages").slideUp();
+                         //endGame();
+
+                  }, 3000));//innermost wfp for slideup and endgame
+                 }, 300));//wait after hiding 4th message
+                }, 10000));//time showing 4th message
+               }, 300));//wait after hiding 3rd message
+              }, 7000));//time showing 3rd message
+             }, 300));//wait after hiding 2nd message
+           }, 5000));//length to show 2nd message
+         }, 300));//wait after hiding first message
+      },5000));//showing "it's your turn"
+    }, 3000));//waiting before starting messages
+   }//waiting_for_player function
+
+});//doc ready
+</script>
+
+
+
+  </body>
+</html>
